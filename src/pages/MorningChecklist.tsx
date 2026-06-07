@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { ChecklistPageConfig } from '../config'
+import IframeOverlay from '../components/IframeOverlay'
 
 interface Props {
   checklistId: string
@@ -26,6 +27,7 @@ const EVENING_STARS = ['🌙', '⭐', '✨', '💫', '🌙', '⭐', '✨']
 export default function MorningChecklist({ checklistId, config, childName }: Props) {
   const [checked, setChecked] = useState<Set<string>>(() => loadChecked(checklistId))
   const [time, setTime] = useState(new Date())
+  const [overlayUrl, setOverlayUrl] = useState<string | null>(null)
 
   const variant = checklistId.replace('-checklist', '') // 'morning' | 'evening'
   const decorations = variant === 'evening' ? EVENING_STARS : MORNING_STARS
@@ -42,12 +44,13 @@ export default function MorningChecklist({ checklistId, config, childName }: Pro
 
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
-      if (e.data?.type === 'PUZZLE_SOLVED') {
-        setChecked(prev => {
-          const next = new Set(prev)
-          config.items.filter(i => i.link).forEach(i => next.add(i.id))
-          return next
-        })
+        if (e.data?.type === 'PUZZLE_SOLVED') {
+            setChecked(prev => {
+            const next = new Set(prev)
+            config.items.filter(i => i.link).forEach(i => next.add(i.id))
+            return next
+            })
+            setOverlayUrl(null)
       }
     }
     window.addEventListener('message', handleMessage)
@@ -111,14 +114,12 @@ export default function MorningChecklist({ checklistId, config, childName }: Pro
                 </span>
               </button>
               {item.link && (
-                <a
-                  href={item.link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
                   className="item-link"
+                  onClick={() => setOverlayUrl(item.link!.href)}
                 >
                   {item.link.label} →
-                </a>
+                </button>
               )}
             </li>
           )
@@ -147,6 +148,10 @@ export default function MorningChecklist({ checklistId, config, childName }: Pro
           <p>🎉 Super gedaan, {childName}! 🎉</p>
           <p className="celebration-sub">{config.celebrationText}</p>
         </div>
+      )}
+
+      {overlayUrl && (
+        <IframeOverlay url={overlayUrl} onClose={() => setOverlayUrl(null)} />
       )}
     </div>
   )
