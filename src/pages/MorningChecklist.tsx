@@ -129,9 +129,14 @@ export default function MorningChecklist({ checklistId, config, childName }: Pro
         <button
           className={`completion-btn${allDone ? ' ready' : ''}`}
           disabled={!allDone}
-          onClick={() =>
-            window.postMessage({ type: config.completionButton!.messageType }, '*')
-          }
+          onClick={() => {
+            const msg = {
+              type: 'MATH_LOCK_EXERCISE_COMPLETED',
+              targetUrl: window.location.hash.slice(1) || undefined,
+            }
+            console.log('[liene-dashboard] postMessage:', msg)
+            window.postMessage(msg, '*')
+          }}
         >
           {config.completionButton.label}
         </button>
