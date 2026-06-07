@@ -6,37 +6,39 @@ export interface ChecklistItem {
   link?: {
     href: string;
     label: string;
-    mathLock?: boolean; // vereist een wiskundeoefening om te openen
   };
 }
 
 export interface TimeSlot {
   startHour: number; // 0-23
   endHour: number;   // 0-23, exclusive
-  page: 'morning-checklist';
+  page: 'morning-checklist' | 'evening-checklist';
   label: string;
 }
 
-export interface MorningChecklistPageConfig {
+export interface ChecklistPageConfig {
   title: string;
   subtitle: string;
+  celebrationText: string;
   items: ChecklistItem[];
+  completionButton?: {
+    label: string;
+    messageType: string; // window.postMessage({ type: messageType }, '*')
+  };
 }
 
 export interface Config {
   childName: string;
-  mathExerciseUrl: string; // basis-URL voor de wiskundeoefening; doel-URL wordt als #hash toegevoegd
   timeSlots: TimeSlot[];
   pages: {
-    'morning-checklist': MorningChecklistPageConfig;
+    'morning-checklist': ChecklistPageConfig;
+    'evening-checklist': ChecklistPageConfig;
   };
 }
 
 export const config: Config = {
   childName: 'Liene',
-  mathExerciseUrl: 'https://puzzel.lienesimilon.be',
 
-  // Voeg hier nieuwe tijdsloten toe: startHour t/m endHour (niet inbegrepen)
   timeSlots: [
     {
       startHour: 7,
@@ -44,12 +46,23 @@ export const config: Config = {
       page: 'morning-checklist',
       label: 'Ochtend routine',
     },
+    {
+      startHour: 19,
+      endHour: 21,
+      page: 'evening-checklist',
+      label: 'Avond routine',
+    },
   ],
 
   pages: {
     'morning-checklist': {
-      title: 'Goedemorgen',
-      subtitle: 'Vergeet niets voor je naar school gaat! 🎒',
+      title: 'Even wachten!',
+      subtitle: 'Doe eerst je taken, dan mag je spelen! 🎮',
+      celebrationText: 'Je mag nu spelen! Veel plezier! 🎉',
+      completionButton: {
+        label: 'Ik mag spelen! 🚀',
+        messageType: 'CHECKLIST_COMPLETED',
+      },
       items: [
         { id: 'ontbijt',  label: 'Ontbijt',                emoji: '🥣' },
         { id: 'tanden',   label: 'Tanden poetsen',          emoji: '🦷' },
@@ -64,6 +77,28 @@ export const config: Config = {
           link: {
             href: 'https://puzzel.lienesimilon.be',
             label: 'Klik hier voor de puzzel!',
+          },
+        },
+      ],
+    },
+
+    'evening-checklist': {
+      title: 'Even wachten!',
+      subtitle: 'Doe eerst je taken, dan mag je spelen! 🎮',
+      celebrationText: 'Je mag nu spelen! Veel plezier! 🎉',
+      completionButton: {
+        label: 'Ik mag spelen! 🎮',
+        messageType: 'CHECKLIST_COMPLETED',
+      },
+      items: [
+        { id: 'avond-tanden', label: 'Tanden poetsen', emoji: '🦷' },
+        {
+          id: 'spel',
+          label: 'Het spel gespeeld',
+          emoji: '🎮',
+          link: {
+            href: 'https://puzzel.lienesimilon.be',
+            label: 'Speel het spel!',
           },
         },
       ],

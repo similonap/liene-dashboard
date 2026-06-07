@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { config } from './config'
+import type { ChecklistPageConfig } from './config'
 import MorningChecklist from './pages/MorningChecklist'
-import DefaultPage from './pages/DefaultPage'
 
 // Debug: add ?time=08:30 to the URL to simulate a specific hour
 function getDebugHour(): number | null {
@@ -21,12 +21,20 @@ function getCurrentPageId(): string | null {
   return null
 }
 
+const defaultConfig: ChecklistPageConfig = {
+  title: 'Even wachten!',
+  subtitle: 'Doe eerst je taak, dan mag je spelen! 🎮',
+  celebrationText: 'Je mag nu spelen! Veel plezier! 🎉',
+  completionButton: { label: 'Ik mag spelen! 🚀', messageType: 'CHECKLIST_COMPLETED' },
+  items: Object.values(config.pages).flatMap(p => p.items).filter(item => item.alwaysVisible),
+}
+
 function App() {
   const [pageId, setPageId] = useState<string | null>(getCurrentPageId)
   const debugHour = getDebugHour()
 
   useEffect(() => {
-    if (debugHour !== null) return // don't auto-switch when debugging
+    if (debugHour !== null) return
     const interval = setInterval(() => setPageId(getCurrentPageId()), 60_000)
     return () => clearInterval(interval)
   }, [debugHour])
@@ -39,31 +47,20 @@ function App() {
     </div>
   )
 
-  if (pageId === 'morning-checklist') {
-    return (
-      <>
-        {debugBanner}
-        <MorningChecklist
-          config={config.pages['morning-checklist']}
-          childName={config.childName}
-          mathExerciseUrl={config.mathExerciseUrl}
-        />
-      </>
-    )
-  }
-
-  const alwaysVisibleItems = config.pages['morning-checklist'].items.filter(
-    item => item.alwaysVisible,
-  )
+  const checklistId = (pageId === 'morning-checklist' || pageId === 'evening-checklist')
+    ? pageId
+    : 'default-checklist'
+  const checklistConfig = checklistId === 'default-checklist'
+    ? defaultConfig
+    : config.pages[checklistId]
 
   return (
     <>
       {debugBanner}
-      <DefaultPage
+      <MorningChecklist
+        checklistId={checklistId}
+        config={checklistConfig}
         childName={config.childName}
-        timeSlots={config.timeSlots}
-        alwaysVisibleItems={alwaysVisibleItems}
-        mathExerciseUrl={config.mathExerciseUrl}
       />
     </>
   )

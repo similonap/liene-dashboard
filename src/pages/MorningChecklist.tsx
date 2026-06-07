@@ -1,31 +1,35 @@
 import { useState, useEffect } from 'react'
-import type { MorningChecklistPageConfig } from '../config'
-import { useMathLock } from '../hooks/useMathLock'
-import IframeOverlay from '../components/IframeOverlay'
+import type { ChecklistPageConfig } from '../config'
 
 interface Props {
-  config: MorningChecklistPageConfig
+  checklistId: string
+  config: ChecklistPageConfig
   childName: string
-  mathExerciseUrl: string
 }
 
-function getTodayKey() {
-  return `checklist-${new Date().toISOString().slice(0, 10)}`
+function getTodayKey(checklistId: string) {
+  return `checklist-${checklistId}-${new Date().toISOString().slice(0, 10)}`
 }
 
-function loadChecked(): Set<string> {
+function loadChecked(checklistId: string): Set<string> {
   try {
-    const raw = localStorage.getItem(getTodayKey())
+    const raw = localStorage.getItem(getTodayKey(checklistId))
     return raw ? new Set(JSON.parse(raw)) : new Set()
   } catch {
     return new Set()
   }
 }
 
-export default function MorningChecklist({ config, childName, mathExerciseUrl }: Props) {
-  const [checked, setChecked] = useState<Set<string>>(loadChecked)
+const MORNING_STARS = ['⭐', '🌟', '✨', '💫', '⭐', '🌟', '✨']
+const EVENING_STARS = ['🌙', '⭐', '✨', '💫', '🌙', '⭐', '✨']
+
+export default function MorningChecklist({ checklistId, config, childName }: Props) {
+  const [checked, setChecked] = useState<Set<string>>(() => loadChecked(checklistId))
   const [time, setTime] = useState(new Date())
-  const { unlocked, openLocked, iframeUrl, closeIframe } = useMathLock(mathExerciseUrl)
+
+  const variant = checklistId.replace('-checklist', '') // 'morning' | 'evening'
+  const decorations = variant === 'evening' ? EVENING_STARS : MORNING_STARS
+  const greeting = variant === 'evening' ? '🌙' : '☀️'
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000)
@@ -33,24 +37,22 @@ export default function MorningChecklist({ config, childName, mathExerciseUrl }:
   }, [])
 
   useEffect(() => {
-    localStorage.setItem(getTodayKey(), JSON.stringify([...checked]))
-  }, [checked])
+    localStorage.setItem(getTodayKey(checklistId), JSON.stringify([...checked]))
+  }, [checked, checklistId])
 
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       if (e.data?.type === 'PUZZLE_SOLVED') {
         setChecked(prev => {
           const next = new Set(prev)
-          config.items
-            .filter(i => i.link?.href.startsWith(mathExerciseUrl))
-            .forEach(i => next.add(i.id))
+          config.items.filter(i => i.link).forEach(i => next.add(i.id))
           return next
         })
       }
     }
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
-  }, [config.items, mathExerciseUrl])
+  }, [config.items])
 
   function toggle(id: string) {
     setChecked(prev => {
@@ -72,18 +74,16 @@ export default function MorningChecklist({ config, childName, mathExerciseUrl }:
   })
 
   return (
-    <>
-    {iframeUrl && <IframeOverlay url={iframeUrl} onClose={closeIframe} />}
-    <div className={`page morning${allDone ? ' all-done' : ''}`}>
+    <div className={`page ${variant}${allDone ? ' all-done' : ''}`}>
       <div className="stars" aria-hidden="true">
-        {['⭐', '🌟', '✨', '💫', '⭐', '🌟', '✨'].map((s, i) => (
+        {decorations.map((s, i) => (
           <span key={i} className="star" style={{ '--i': i } as React.CSSProperties}>{s}</span>
         ))}
       </div>
 
       <header className="morning-header">
         <div className="clock">{timeStr}</div>
-        <h1>{config.title}, {childName}! ☀️</h1>
+        <h1>{config.title}, {childName}! {greeting}</h1>
         <p className="subtitle">{config.subtitle}</p>
       </header>
 
@@ -111,37 +111,38 @@ export default function MorningChecklist({ config, childName, mathExerciseUrl }:
                 </span>
               </button>
               {item.link && (
-                item.link.mathLock && !unlocked.has(item.link.href)
-                  ? (
-                    <button
-                      className="item-link math-locked"
-                      onClick={() => openLocked(item.link!.href)}
-                    >
-                      🔒 {item.link.label} →
-                    </button>
-                  ) : (
-                    <a
-                      href={item.link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="item-link"
-                    >
-                      {item.link.mathLock ? '🔓 ' : ''}{item.link.label} →
-                    </a>
-                  )
+                <a
+                  href={item.link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="item-link"
+                >
+                  {item.link.label} →
+                </a>
               )}
             </li>
           )
         })}
       </ul>
 
+      {config.completionButton && (
+        <button
+          className={`completion-btn${allDone ? ' ready' : ''}`}
+          disabled={!allDone}
+          onClick={() =>
+            window.postMessage({ type: config.completionButton!.messageType }, '*')
+          }
+        >
+          {config.completionButton.label}
+        </button>
+      )}
+
       {allDone && (
         <div className="celebration" role="status">
-          <p>🎉 Super gedaan, {childName}! Alles is klaar! 🎉</p>
-          <p className="celebration-sub">Je bent helemaal klaar voor school! 🏫</p>
+          <p>🎉 Super gedaan, {childName}! 🎉</p>
+          <p className="celebration-sub">{config.celebrationText}</p>
         </div>
       )}
     </div>
-    </>
   )
 }

@@ -16,48 +16,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Iframe overlay ── */
-.iframe-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  background: #1e1b4b;
-}
-.iframe-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.6rem 1rem;
-  background: #1e1b4b;
-  flex-shrink: 0;
-}
-.iframe-title {
-  color: #c4b5fd;
-  font-weight: 800;
-  font-size: 1rem;
-}
-.iframe-close {
-  background: rgba(255,255,255,0.1);
-  border: none;
-  color: #e9d5ff;
-  font-size: 1.1rem;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s;
-}
-.iframe-close:hover { background: rgba(255,255,255,0.2); }
-.iframe-content {
-  flex: 1;
-  border: none;
-  width: 100%;
-}
 
 /* ── Debug banner ── */
 .debug-banner {
@@ -99,6 +57,58 @@ body {
 
 .page.morning.all-done {
   background: linear-gradient(160deg, #b8f5c8 0%, #fff0ba 50%, #c8f0fe 100%);
+}
+
+/* ══════════════════════════════════════════
+   EVENING PAGE
+══════════════════════════════════════════ */
+.page.evening {
+  background: linear-gradient(160deg, #1e1b4b 0%, #312e81 40%, #4c1d95 100%);
+}
+.page.evening .morning-header h1,
+.page.evening .celebration p:first-child {
+  color: #e0e7ff;
+}
+.page.evening .clock {
+  color: #a5b4fc;
+  text-shadow: 0 2px 12px rgba(165, 180, 252, 0.4);
+}
+.page.evening .subtitle,
+.page.evening .celebration-sub {
+  color: #c7d2fe;
+}
+.page.evening .progress-label {
+  color: #a5b4fc;
+}
+.page.evening .progress-fill {
+  background: linear-gradient(90deg, #818cf8, #c084fc);
+}
+.page.evening .checklist-item {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+.page.evening .checklist-item.checked {
+  background: rgba(129, 140, 248, 0.25);
+  box-shadow: 0 4px 16px rgba(129, 140, 248, 0.2);
+}
+.page.evening .item-label {
+  color: #e0e7ff;
+}
+.page.evening .checked .item-label {
+  color: #6b7280;
+}
+.page.evening .item-link {
+  color: #a5b4fc;
+}
+.page.evening .item-link:hover {
+  color: #c084fc;
+}
+.page.evening .completion-btn.ready {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  box-shadow: 0 6px 24px rgba(99, 102, 241, 0.5);
+}
+.page.evening.all-done {
+  background: linear-gradient(160deg, #1e1b4b 0%, #2e1065 50%, #1e1b4b 100%);
 }
 
 /* ── Floating stars decoration ── */
@@ -257,17 +267,6 @@ body {
   transform: scale(1.2);
 }
 
-/* auto-only: niet handmatig klikbaar */
-.checklist-item.auto-only .check-btn {
-  cursor: default;
-  opacity: 0.85;
-}
-.checklist-item.auto-only .item-label::after {
-  content: ' 🎮';
-  font-size: 0.85em;
-  opacity: 0.6;
-}
-
 /* ── Link inside checklist item ── */
 .item-link {
   display: block;
@@ -281,6 +280,42 @@ body {
 .item-link:hover {
   color: #ec4899;
   text-decoration: underline;
+}
+
+/* ── Completion button ── */
+.completion-btn {
+  margin-top: 1.25rem;
+  z-index: 1;
+  width: 100%;
+  max-width: 520px;
+  padding: 1.1rem;
+  border: none;
+  border-radius: 18px;
+  font-family: inherit;
+  font-size: 1.3rem;
+  font-weight: 900;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.4);
+  color: #9ca3af;
+  transition: background 0.3s, color 0.3s, transform 0.15s, box-shadow 0.3s;
+}
+.completion-btn.ready {
+  cursor: pointer;
+  background: linear-gradient(135deg, #a78bfa, #ec4899);
+  color: #fff;
+  box-shadow: 0 6px 24px rgba(167, 139, 250, 0.45);
+  animation: pulse-btn 2s ease-in-out infinite;
+}
+.completion-btn.ready:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 32px rgba(167, 139, 250, 0.6);
+}
+.completion-btn.ready:active {
+  transform: scale(0.98);
+}
+@keyframes pulse-btn {
+  0%, 100% { box-shadow: 0 6px 24px rgba(167, 139, 250, 0.45); }
+  50%       { box-shadow: 0 6px 36px rgba(236, 72, 153, 0.6); }
 }
 
 /* ── Celebration ── */
@@ -351,22 +386,6 @@ body {
   color: #9ca3af;
   font-weight: 600;
 }
-/* ── Math-locked links ── */
-.item-link.math-locked {
-  background: none;
-  border: none;
-  font-family: inherit;
-  cursor: pointer;
-  color: #d97706;
-  font-weight: 700;
-  font-size: inherit;
-  padding: 0;
-  text-decoration: underline dotted;
-}
-.item-link.math-locked:hover {
-  color: #b45309;
-}
-
 /* ── Always-visible tasks on default page ── */
 .always-visible-tasks {
   list-style: none;
