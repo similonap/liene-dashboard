@@ -41,22 +41,22 @@ export default function MorningChecklist({ config, childName, mathExerciseUrl }:
       if (e.data?.type === 'PUZZLE_SOLVED') {
         setChecked(prev => {
           const next = new Set(prev)
-          config.items.filter(i => i.autoOnly).forEach(i => next.add(i.id))
+          config.items
+            .filter(i => i.link?.href.startsWith(mathExerciseUrl))
+            .forEach(i => next.add(i.id))
           return next
         })
       }
     }
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
-  }, [config.items])
+  }, [config.items, mathExerciseUrl])
 
   function toggle(id: string) {
-    const item = config.items.find(i => i.id === id)
-    if (item?.autoOnly) return
     setChecked(prev => {
       const next = new Set(prev)
-      if (next.has(item!.id)) next.delete(item!.id)
-      else next.add(item!.id)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
   }
@@ -97,19 +97,17 @@ export default function MorningChecklist({ config, childName, mathExerciseUrl }:
       <ul className="checklist" role="list">
         {config.items.map(item => {
           const isChecked = checked.has(item.id)
-          const isAutoOnly = Boolean(item.autoOnly)
           return (
-            <li key={item.id} className={`checklist-item${isChecked ? ' checked' : ''}${isAutoOnly && !isChecked ? ' auto-only' : ''}`}>
+            <li key={item.id} className={`checklist-item${isChecked ? ' checked' : ''}`}>
               <button
                 className="check-btn"
                 onClick={() => toggle(item.id)}
                 aria-pressed={isChecked}
-                disabled={isAutoOnly && !isChecked}
               >
                 <span className="item-emoji" aria-hidden="true">{item.emoji}</span>
                 <span className="item-label">{item.label}</span>
                 <span className="item-check" aria-hidden="true">
-                  {isChecked ? '✅' : isAutoOnly ? '🔐' : '⬜'}
+                  {isChecked ? '✅' : '⬜'}
                 </span>
               </button>
               {item.link && (
