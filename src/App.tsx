@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
 import { config } from './config'
 import type { ChecklistPageConfig } from './config'
 import ChecklistPage from './pages/ChecklistPage'
@@ -22,7 +23,7 @@ function getCurrentPageId(timeSlots: { startHour: number; endHour: number; page:
 }
 
 function App() {
-  const slug = window.location.pathname.slice(1).split('/')[0] || 'liene'
+  const { slug = 'liene' } = useParams()
   const user = config.users[slug]
 
   const [pageId, setPageId] = useState<string | null>(() =>
