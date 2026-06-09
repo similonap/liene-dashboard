@@ -37,7 +37,29 @@ export interface AppConfig {
   users: Record<string, UserConfig>;
 }
 
+const fallbackChecklist: ChecklistPageConfig = {
+  title: 'Even wachten!',
+  subtitle: 'Doe eerst je opdracht, dan mag je spelen! 🎮',
+  celebrationText: 'Je mag nu spelen! Veel plezier! 🎉',
+  completionButton: {
+    label: 'Ik mag spelen! 🚀',
+    messageType: 'CHECKLIST_COMPLETED',
+  },
+  items: [
+    {
+      id: 'opdracht',
+      label: 'Online opdracht gemaakt',
+      emoji: '🧩',
+      link: {
+        href: 'https://puzzel.lienesimilon.be',
+        label: 'Klik hier voor de puzzel!',
+      },
+    },
+  ],
+}
+
 const lienesPages: Record<string, ChecklistPageConfig> = {
+  'fallback-checklist': fallbackChecklist,
   'morning-checklist': {
     title: 'Even wachten!',
     subtitle: 'Doe eerst je taken, dan mag je spelen! 🎮',
@@ -93,8 +115,9 @@ export const config: AppConfig = {
     liene: {
       name: 'Liene',
       timeSlots: [
-        { startHour: 7,  endHour: 9,  page: 'morning-checklist', label: 'Ochtend routine' },
-        { startHour: 19, endHour: 21, page: 'evening-checklist', label: 'Avond routine' },
+        { startHour: 7,  endHour: 9,  page: 'morning-checklist',  label: 'Ochtend routine' },
+        { startHour: 19, endHour: 21, page: 'evening-checklist',  label: 'Avond routine' },
+        { startHour: 0,  endHour: 24, page: 'fallback-checklist', label: 'Vrije tijd' },
       ],
       pages: lienesPages,
     },
@@ -102,8 +125,9 @@ export const config: AppConfig = {
     lotte: {
       name: 'Lotte',
       timeSlots: [
-        { startHour: 7,  endHour: 9,  page: 'morning-checklist', label: 'Ochtend routine' },
-        { startHour: 19, endHour: 21, page: 'evening-checklist', label: 'Avond routine' },
+        { startHour: 7,  endHour: 9,  page: 'morning-checklist',  label: 'Ochtend routine' },
+        { startHour: 19, endHour: 21, page: 'evening-checklist',  label: 'Avond routine' },
+        { startHour: 0,  endHour: 24, page: 'fallback-checklist', label: 'Vrije tijd' },
       ],
       pages: lienesPages,
     },
