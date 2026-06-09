@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { config } from './config'
 import type { ChecklistPageConfig } from './config'
-import MorningChecklist from './pages/MorningChecklist'
+import ChecklistPage from './pages/ChecklistPage'
+import DefaultPage from './pages/DefaultPage'
 
-// Debug: add ?time=08:30 to the URL to simulate a specific hour
 function getDebugHour(): number | null {
   const param = new URLSearchParams(window.location.search).get('time')
   if (!param) return null
@@ -11,9 +11,9 @@ function getDebugHour(): number | null {
   return Number.isFinite(h) && h >= 0 && h <= 23 ? h : null
 }
 
-function getCurrentPageId(): string | null {
+function getCurrentPageId(timeSlots: { startHour: number; endHour: number; page: string }[]): string | null {
   const hour = getDebugHour() ?? new Date().getHours()
-  for (const slot of config.timeSlots) {
+  for (const slot of timeSlots) {
     if (hour >= slot.startHour && hour < slot.endHour) {
       return slot.page
     }
@@ -21,23 +21,32 @@ function getCurrentPageId(): string | null {
   return null
 }
 
-const defaultConfig: ChecklistPageConfig = {
-  title: 'Even wachten!',
-  subtitle: 'Doe eerst je taak, dan mag je spelen! 🎮',
-  celebrationText: 'Je mag nu spelen! Veel plezier! 🎉',
-  completionButton: { label: 'Ik mag spelen! 🚀', messageType: 'CHECKLIST_COMPLETED' },
-  items: Object.values(config.pages).flatMap(p => p.items).filter(item => item.alwaysVisible),
-}
-
 function App() {
-  const [pageId, setPageId] = useState<string | null>(getCurrentPageId)
+  const slug = window.location.pathname.slice(1).split('/')[0] || 'liene'
+  const user = config.users[slug]
+
+  const [pageId, setPageId] = useState<string | null>(() =>
+    user ? getCurrentPageId(user.timeSlots) : null
+  )
   const debugHour = getDebugHour()
 
   useEffect(() => {
-    if (debugHour !== null) return
-    const interval = setInterval(() => setPageId(getCurrentPageId()), 60_000)
+    if (!user || debugHour !== null) return
+    const interval = setInterval(() => setPageId(getCurrentPageId(user.timeSlots)), 60_000)
     return () => clearInterval(interval)
-  }, [debugHour])
+  }, [user, debugHour])
+
+  if (!user) {
+    return (
+      <div className="page default" style={{ justifyContent: 'center' }}>
+        <div className="default-card">
+          <div style={{ fontSize: '3rem' }}>🤷</div>
+          <h1>Onbekende gebruiker</h1>
+          <p className="next-up">Geen dashboard gevonden voor <strong>/{slug || '…'}</strong></p>
+        </div>
+      </div>
+    )
+  }
 
   const debugBanner = debugHour !== null && (
     <div className="debug-banner">
@@ -47,20 +56,35 @@ function App() {
     </div>
   )
 
-  const checklistId = (pageId === 'morning-checklist' || pageId === 'evening-checklist')
-    ? pageId
-    : 'default-checklist'
-  const checklistConfig = checklistId === 'default-checklist'
-    ? defaultConfig
-    : config.pages[checklistId]
+  const activeConfig: ChecklistPageConfig | null = pageId && user.pages[pageId]
+    ? user.pages[pageId]
+    : null
+
+  if (activeConfig && pageId) {
+    return (
+      <>
+        {debugBanner}
+        <ChecklistPage
+          userSlug={slug}
+          checklistId={pageId}
+          config={activeConfig}
+          childName={user.name}
+        />
+      </>
+    )
+  }
+
+  const alwaysVisibleItems = Object.values(user.pages)
+    .flatMap(p => p.items)
+    .filter(item => item.alwaysVisible)
 
   return (
     <>
       {debugBanner}
-      <MorningChecklist
-        checklistId={checklistId}
-        config={checklistConfig}
-        childName={config.childName}
+      <DefaultPage
+        childName={user.name}
+        timeSlots={user.timeSlots}
+        alwaysVisibleItems={alwaysVisibleItems}
       />
     </>
   )

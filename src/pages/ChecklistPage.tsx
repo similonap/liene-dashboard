@@ -3,18 +3,19 @@ import type { ChecklistPageConfig } from '../config'
 import IframeOverlay from '../components/IframeOverlay'
 
 interface Props {
+  userSlug: string
   checklistId: string
   config: ChecklistPageConfig
   childName: string
 }
 
-function getTodayKey(checklistId: string) {
-  return `checklist-${checklistId}-${new Date().toISOString().slice(0, 10)}`
+function getTodayKey(userSlug: string, checklistId: string) {
+  return `checklist-${userSlug}-${checklistId}-${new Date().toISOString().slice(0, 10)}`
 }
 
-function loadChecked(checklistId: string): Set<string> {
+function loadChecked(userSlug: string, checklistId: string): Set<string> {
   try {
-    const raw = localStorage.getItem(getTodayKey(checklistId))
+    const raw = localStorage.getItem(getTodayKey(userSlug, checklistId))
     return raw ? new Set(JSON.parse(raw)) : new Set()
   } catch {
     return new Set()
@@ -24,8 +25,8 @@ function loadChecked(checklistId: string): Set<string> {
 const MORNING_STARS = ['⭐', '🌟', '✨', '💫', '⭐', '🌟', '✨']
 const EVENING_STARS = ['🌙', '⭐', '✨', '💫', '🌙', '⭐', '✨']
 
-export default function MorningChecklist({ checklistId, config, childName }: Props) {
-  const [checked, setChecked] = useState<Set<string>>(() => loadChecked(checklistId))
+export default function ChecklistPage({ userSlug, checklistId, config, childName }: Props) {
+  const [checked, setChecked] = useState<Set<string>>(() => loadChecked(userSlug, checklistId))
   const [time, setTime] = useState(new Date())
   const [overlayUrl, setOverlayUrl] = useState<string | null>(null)
 
@@ -39,8 +40,8 @@ export default function MorningChecklist({ checklistId, config, childName }: Pro
   }, [])
 
   useEffect(() => {
-    localStorage.setItem(getTodayKey(checklistId), JSON.stringify([...checked]))
-  }, [checked, checklistId])
+    localStorage.setItem(getTodayKey(userSlug, checklistId), JSON.stringify([...checked]))
+  }, [checked, userSlug, checklistId])
 
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
